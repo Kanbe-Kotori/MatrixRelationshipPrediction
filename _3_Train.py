@@ -36,7 +36,7 @@ for epoch in range(1, 1001):
         if GPU:
             (feature, label) = (feature.cuda(), label.cuda())
         optimizer.zero_grad()
-        modelInputs = feature.reshape(feature.shape[0], 5, 100)
+        modelInputs = feature.reshape(feature.shape[0], 5, 5050)
         modelOutputs = model(modelInputs)
         loss = costFunc(modelOutputs, label)
         loss.backward()
@@ -66,7 +66,7 @@ for epoch in range(1, 1001):
         for (feature, label) in loaderTest:
             if GPU:
                 (feature, label) = (feature.cuda(), label.cuda())
-            modelInputs = feature.reshape(feature.shape[0], 5, 100)
+            modelInputs = feature.reshape(feature.shape[0], 5, 5050)
             modelOutputs = model(modelInputs)
 
             output = modelOutputs.cpu()

@@ -18,30 +18,49 @@ def execute(listIndex: list[int]):
         dataTF = data[4:104, :]
         dataG = data[104:204, :]
 
-        listCov = numpy.zeros([100, 100])
-        listCovInv = numpy.zeros([100, 100])
-        listPearson = numpy.zeros([100, 100])
-        listSpearman = numpy.zeros([100, 100])
-        listMI = numpy.zeros([100, 100])
+        mutCov = numpy.zeros([100, 100])
+        mutCovInv = numpy.zeros([100, 100])
+        mutPearson = numpy.zeros([100, 100])
+        mutSpearman = numpy.zeros([100, 100])
+        mutMI = numpy.zeros([100, 100])
         for i in range(100):
             targetG = dataG[i]
             for j in range(100):
                 cov = numpy.cov(targetG, dataTF[j])
                 covInv = numpy.linalg.inv(cov)
-                listCov[i][j] = cov[0, 1]
-                listCovInv[i][j] = covInv[0, 1]
-                listPearson[i][j], _ = pearsonr(targetG, dataTF[j])
-                listSpearman[i][j], _ = spearmanr(targetG, dataTF[j])
+                mutCov[i][j] = cov[0, 1]
+                mutCovInv[i][j] = covInv[0, 1]
+                mutPearson[i][j], _ = pearsonr(targetG, dataTF[j])
+                mutSpearman[i][j], _ = spearmanr(targetG, dataTF[j])
                 # Discrete calculation methods cannot be used
                 # https://stackoverflow.com/questions/20491028/optimal-way-to-compute-pairwise-mutual-information-using-numpy
                 # bins = 8 -> Sturges' rule
                 # c_xy = numpy.histogram2d(targetG, dataTF[j], 8)[0]
                 # g, p, dof, expected = chi2_contingency(c_xy, lambda_="log-likelihood")
-                # listMI[i][j] = 0.5 * g / c_xy.sum() / numpy.log(2)
-                listMI[i][j] = mutual_info_regression(targetG.reshape(-1, 1), dataTF[j])
+                # mutMI[i][j] = 0.5 * g / c_xy.sum() / numpy.log(2)
+                mutMI[i][j] = mutual_info_regression(targetG.reshape(-1, 1), dataTF[j])
+
+        selfCov = numpy.zeros(4950)
+        selfCovInv = numpy.zeros(4950)
+        selfPearson = numpy.zeros(4950)
+        selfSpearman = numpy.zeros(4950)
+        selfMI = numpy.zeros(4950)
+        current = 0
+        for i in range(100):
+            targetTF = dataTF[i]
+            for j in range(i+1, 100):
+                cov = numpy.cov(targetTF, dataTF[j])
+                covInv = numpy.linalg.inv(cov)
+                selfCov[current] = cov[0, 1]
+                selfCovInv[current] = covInv[0, 1]
+                selfPearson[current], _ = pearsonr(targetTF, dataTF[j])
+                selfSpearman[current], _ = spearmanr(targetTF, dataTF[j])
+                selfMI[current] = mutual_info_regression(targetTF.reshape(-1, 1), dataTF[j])
+                current += 1
 
         savePath = os.path.join(rootPath, folder, 'feature.npz')
-        numpy.savez(savePath, cov=listCov, covInv=listCovInv, pearson=listPearson, spearman=listSpearman, mi=listMI)
+        numpy.savez(savePath, cov=mutCov, covInv=mutCovInv, pearson=mutPearson, spearman=mutSpearman, mi=mutMI,
+                    tfCov=selfCov, tfCovInv=selfCovInv, tfPearson=selfPearson, tfSpearman=selfSpearman, tfMI=selfMI)
 
 
 execute(list(range(350)))

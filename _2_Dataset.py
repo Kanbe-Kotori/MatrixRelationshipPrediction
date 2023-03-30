@@ -40,6 +40,12 @@ def readFromSingle(index: int):
     listSpearman = arrayData['spearman']
     listMI = arrayData['mi']
 
+    tfCov = arrayData['tfCov']
+    tfCovInv = arrayData['tfCovInv']
+    tfPearson = arrayData['tfPearson']
+    tfSpearman = arrayData['tfSpearman']
+    tfMI = arrayData['tfMI']
+
     labelReader = csv.reader(open(labelPath))
     labels = numpy.zeros([100, 100])
     for line in labelReader:
@@ -51,7 +57,13 @@ def readFromSingle(index: int):
 
     dataPairs = []
     for i in range(100):
-        feature = numpy.vstack((listCov[i], listCovInv[i], listPearson[i], listSpearman[i], listMI[i]))
+        feature = numpy.vstack((
+            numpy.concatenate((listCov[i], tfCov)),
+            numpy.concatenate((listCovInv[i], tfCovInv)),
+            numpy.concatenate((listPearson[i], tfPearson)),
+            numpy.concatenate((listSpearman[i], tfSpearman)),
+            numpy.concatenate((listMI[i], tfMI))
+        ))
         dataPair = feature, labels[i]
         dataPairs.append(dataPair)
 

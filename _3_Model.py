@@ -11,10 +11,10 @@ class Model(nn.Module):
         )
         self.dense = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(100, 512),
-            nn.BatchNorm1d(512),
+            nn.Linear(5050, 1024),
+            nn.BatchNorm1d(1024),
             nn.ReLU(),
-            nn.Linear(512, 128),
+            nn.Linear(1024, 128),
             nn.BatchNorm1d(128),
             nn.ReLU()
         )
