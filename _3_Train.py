@@ -20,14 +20,14 @@ loaderTest = dataTest.getLoader(100)
 
 GPU: bool = torch.cuda.is_available()
 model = M.Model()
-costFunc = torch.nn.BCELoss()
-# costFunc = M.FocalLoss(gamma=2, alpha=0.05)
+# costFunc = torch.nn.BCELoss()
+costFunc = M.ImbalancedLoss(alpha=20)
 optimizer = torch.optim.Adam(model.parameters())
 if GPU:
     model.cuda()
     costFunc.cuda()
 
-for epoch in range(1, 1001):
+for epoch in range(1, 10001):
     tp, tn, fp, fn = 0, 0, 0, 0
     # auprcCount = 0
     lossCount = 0
@@ -81,5 +81,5 @@ for epoch in range(1, 1001):
         accuracy = 100 * (testtp + testtn) / (testtp + testtn + testfp + testfn)
         recall = 100 * testtp / (testtp + testfn)
         print('test acc {:.3f}% recall {:.3f}%'.format(accuracy, recall))
-    # if epoch % 100 == 0:
-    #     torch.save(model.state_dict(), './model/' + str(epoch) + '.pkl')
+    if epoch % 1000 == 0:
+        torch.save(model.state_dict(), './model/' + str(epoch) + '.pkl')

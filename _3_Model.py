@@ -27,3 +27,15 @@ class Model(nn.Module):
         x = self.conv(x)
         x = self.dense(x)
         return self.output(x)
+
+
+class ImbalancedLoss(nn.Module):
+    def __init__(self, alpha):
+        super(ImbalancedLoss, self).__init__()
+        self.alpha = alpha
+
+    def forward(self, inputs, targets):
+        pos_weight = self.alpha * targets + (1 - targets)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        loss = criterion(inputs, targets)
+        return loss
