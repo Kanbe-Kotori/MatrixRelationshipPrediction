@@ -5,6 +5,7 @@ from sklearn.feature_selection import mutual_info_regression
 from pathlib import Path
 
 rootPath: str = os.path.join(Path(__file__).parent, '5mr')
+DoNormalize = True
 
 
 def execute(listIndex: list[int]):
@@ -15,6 +16,12 @@ def execute(listIndex: list[int]):
         fullPath = os.path.join(rootPath, folder, fileName)
         dataLines = open(fullPath).read().split('\n')[:100]
         data = numpy.array([line.split('\t') for line in dataLines]).astype(float).transpose()
+        
+        if DoNormalize:
+            mean = numpy.mean(data, axis=0)
+            std = numpy.std(data, axis=0)
+            data = (data - mean) / std
+        
         dataTF = data[4:104, :]
         dataG = data[104:204, :]
 
@@ -58,7 +65,8 @@ def execute(listIndex: list[int]):
                 selfMI[current] = mutual_info_regression(targetTF.reshape(-1, 1), dataTF[j])
                 current += 1
 
-        savePath = os.path.join(rootPath, folder, 'feature.npz')
+        fileName = 'feature_norm.npz' if DoNormalize else 'feature.npz'
+        savePath = os.path.join(rootPath, folder, fileName)
         numpy.savez(savePath, cov=mutCov, covInv=mutCovInv, pearson=mutPearson, spearman=mutSpearman, mi=mutMI,
                     tfCov=selfCov, tfCovInv=selfCovInv, tfPearson=selfPearson, tfSpearman=selfSpearman, tfMI=selfMI)
 
