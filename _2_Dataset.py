@@ -30,7 +30,7 @@ class Dataset(data.Dataset):
 
 def readFromSingle(index: int):
     folder = 'De-noised_100G_9T_300cPerT_4_DS{}'.format(index)
-    dataPath = os.path.join(rootPath, folder, 'feature.npz')
+    dataPath = os.path.join(rootPath, folder, 'feature_norm.npz')
     labelPath = os.path.join(rootPath, folder, 'bipartite_GRN.csv')
 
     arrayData = numpy.load(dataPath)
