@@ -21,7 +21,7 @@ loaderTest = dataTest.getLoader(100)
 GPU: bool = torch.cuda.is_available()
 model = M.Model()
 # costFunc = torch.nn.BCELoss()
-costFunc = M.ImbalancedLoss(alpha=20)
+costFunc = M.ImbalancedLoss(alpha=9)
 optimizer = torch.optim.Adam(model.parameters())
 if GPU:
     model.cuda()

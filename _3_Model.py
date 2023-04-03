@@ -20,7 +20,7 @@ class Model(nn.Module):
         )
         self.output = nn.Sequential(
             nn.Linear(128, 100),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
     def forward(self, x):
