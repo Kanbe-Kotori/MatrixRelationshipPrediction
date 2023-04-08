@@ -1,4 +1,5 @@
 import os
+import csv
 import numpy
 import torch
 import torch.utils.data as data
@@ -27,9 +28,10 @@ class Dataset(data.Dataset):
         )
 
 
-def readFromSingle(folderIndex: int, featureIndex: int):
-    folder = 'De-noised_100G_9T_300cPerT_4_DS{}'.format(folderIndex)
-    dataPath = os.path.join(rootPath, folder, 'feature{}.npz'.format(featureIndex))
+def readFromSingle(index: int):
+    folder = 'De-noised_100G_9T_300cPerT_4_DS{}'.format(index)
+    dataPath = os.path.join(rootPath, folder, 'feature_norm.npz')
+    labelPath = os.path.join(rootPath, folder, 'bipartite_GRN.csv')
 
     arrayData = numpy.load(dataPath)
     listCov = arrayData['cov']
@@ -37,18 +39,32 @@ def readFromSingle(folderIndex: int, featureIndex: int):
     listPearson = arrayData['pearson']
     listSpearman = arrayData['spearman']
     listMI = arrayData['mi']
-    label = arrayData['label']
+
+    tfCov = arrayData['tfCov']
+    tfCovInv = arrayData['tfCovInv']
+    tfPearson = arrayData['tfPearson']
+    tfSpearman = arrayData['tfSpearman']
+    tfMI = arrayData['tfMI']
+
+    labelReader = csv.reader(open(labelPath))
+    labels = numpy.zeros([100, 100])
+    for line in labelReader:
+        if int(line[0]) < 5:
+            continue
+        tr = int(line[0]) - 5
+        p = int(line[1]) - 105
+        labels[p][tr] = 1
 
     dataPairs = []
     for i in range(100):
         feature = numpy.vstack((
-            listCov,
-            listCovInv,
-            listPearson,
-            listSpearman,
-            listMI
+            numpy.concatenate((listCov[i], tfCov)),
+            numpy.concatenate((listCovInv[i], tfCovInv)),
+            numpy.concatenate((listPearson[i], tfPearson)),
+            numpy.concatenate((listSpearman[i], tfSpearman)),
+            numpy.concatenate((listMI[i], tfMI))
         ))
-        dataPair = feature, label
+        dataPair = feature, labels[i]
         dataPairs.append(dataPair)
 
     return dataPairs
@@ -58,7 +74,6 @@ def generateDataset(listIndex: list[int]):
     fullData = []
     for index in listIndex:
         print('{}/{}'.format(index, len(listIndex)))
-        for feature in range(100):
-            fullData += readFromSingle(index, feature)
+        fullData += readFromSingle(index)
     dataset = Dataset(fullData)
     return dataset
