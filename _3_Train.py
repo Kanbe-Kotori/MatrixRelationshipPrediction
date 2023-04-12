@@ -1,17 +1,25 @@
+import math
+import numpy
 import torch
 import _2_Dataset as D
 import _3_Model as M
 
 from sklearn.metrics import average_precision_score
+from tqdm import *
 
 
 def calculate_auprc(predict, actual):
+    numpy.warnings.filterwarnings('ignore')
+
     predict = predict.detach().numpy()
     actual = actual.detach().numpy()
     auprc = average_precision_score(actual, predict, average='macro')
-    return auprc
+    if math.isnan(auprc):
+        auprc = 0
+    return auprc * 100
 
 
+torch.manual_seed(42)
 dataTrain = D.generateDataset(list(range(300)))
 dataTest = D.generateDataset(list(range(300, 350)))
 
@@ -26,10 +34,11 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
 if GPU:
     model.cuda()
     costFunc.cuda()
+    torch.cuda.manual_seed_all(42)
 
-for epoch in range(1, 10001):
+for epoch in tqdm(range(1, 10001)):
     tp, tn, fp, fn = 0, 0, 0, 0
-    # auprcCount = 0
+    auprcCount = 0
     lossCount = 0
     for (feature, label) in loaderTrain:
         model.train()
@@ -51,18 +60,21 @@ for epoch in range(1, 10001):
         tn += ((binaryOutputs == 0) & (label == 0)).sum().item()  # true negatives
         fp += ((binaryOutputs == 1) & (label == 0)).sum().item()  # false positives
         fn += ((binaryOutputs == 0) & (label == 1)).sum().item()  # false negatives
+
+        # auprcCount += calculate_auprc(output, label)
         lossCount += loss
 
     if epoch % 1 == 0:
         accuracy = 100 * (tp + tn) / (tp + tn + fp + fn)
         recall = 100 * tp / (tp + fn)
-        # auprcCount /= len(dataTrain) / 100
-        auprcCount = 0
-        print('epoch {} acc {:.3f}% recall {:.3f}% auprc {:.3f}%'.format(epoch, accuracy, recall, auprcCount))
-        print('epoch {} loss {}'.format(epoch, lossCount / len(dataTrain)))
+        auprcCount /= len(dataTrain) / 100
+        tqdm.write('')
+        tqdm.write('acc {:.3f}% recall {:.3f}% auprc {:.3f}%'.format(accuracy, recall, auprcCount))
+        tqdm.write('loss {}'.format(lossCount / len(dataTrain)))
     if epoch % 10 == 0:
         model.eval()
         testtp, testtn, testfp, testfn = 0, 0, 0, 0
+        testAuprcCount = 0
         for (feature, label) in loaderTest:
             if GPU:
                 (feature, label) = (feature.cuda(), label.cuda())
@@ -78,8 +90,12 @@ for epoch in range(1, 10001):
             testtn += ((binaryOutputs == 0) & (label == 0)).sum().item()  # true negatives
             testfp += ((binaryOutputs == 1) & (label == 0)).sum().item()  # false positives
             testfn += ((binaryOutputs == 0) & (label == 1)).sum().item()  # false negatives
+
+            testAuprcCount += calculate_auprc(output, label)
         accuracy = 100 * (testtp + testtn) / (testtp + testtn + testfp + testfn)
         recall = 100 * testtp / (testtp + testfn)
-        print('test acc {:.3f}% recall {:.3f}%'.format(accuracy, recall))
+        testAuprcCount /= len(dataTest) / 100
+        tqdm.write('\nTesting result:')
+        tqdm.write('test acc {:.3f}% recall {:.3f}% auprc {:.3f}%'.format(accuracy, recall, testAuprcCount))
     if epoch % 1000 == 0:
         torch.save(model.state_dict(), './model/' + str(epoch) + '.pkl')
