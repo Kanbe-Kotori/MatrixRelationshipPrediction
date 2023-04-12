@@ -46,16 +46,16 @@ def readFromSingle(folderIndex: int):
             listTFiTFi[0][i] = listCov[i + 100][i + 100]
             listTFiTFi[1][i] = listMI[i + 100][i + 100]
 
-        listTFiTFj = np.zeros([5, 5050])
-        current = 0
-        for i in range(100):
-            for j in range(i, 100):
-                listTFiTFj[0][current] = listCov[i + 100][j + 100]
-                listTFiTFj[1][current] = listCovInv[i + 100][j + 100]
-                listTFiTFj[2][current] = listPearson[i + 100][j + 100]
-                listTFiTFj[3][current] = listSpearman[i + 100][j + 100]
-                listTFiTFj[4][current] = listMI[i + 100][j + 100]
-                current += 1
+        # listTFiTFj = np.zeros([5, 5050])
+        # current = 0
+        # for i in range(100):
+        #     for j in range(i, 100):
+        #         listTFiTFj[0][current] = listCov[i + 100][j + 100]
+        #         listTFiTFj[1][current] = listCovInv[i + 100][j + 100]
+        #         listTFiTFj[2][current] = listPearson[i + 100][j + 100]
+        #         listTFiTFj[3][current] = listSpearman[i + 100][j + 100]
+        #         listTFiTFj[4][current] = listMI[i + 100][j + 100]
+        #         current += 1
 
         for i in range(100):
             feature = numpy.vstack((
@@ -63,9 +63,10 @@ def readFromSingle(folderIndex: int):
                 listCovInv[i, 100:],
                 listPearson[i, 100:],
                 listSpearman[i, 100:],
-                listMI[i, 100:]
+                listMI[i, 100:],
+                listTFiTFi[0],
+                listTFiTFi[1],
             ))
-            feature = np.concatenate((feature, listTFiTFj), axis=1)
             dataPair = feature, label[i]
             dataPairs.append(dataPair)
 

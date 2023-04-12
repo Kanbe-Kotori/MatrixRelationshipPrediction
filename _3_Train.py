@@ -22,7 +22,7 @@ GPU: bool = torch.cuda.is_available()
 model = M.Model()
 # costFunc = torch.nn.BCELoss()
 costFunc = M.ImbalancedLoss(alpha=19)
-optimizer = torch.optim.Adam(model.parameters())
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
 if GPU:
     model.cuda()
     costFunc.cuda()
@@ -36,7 +36,7 @@ for epoch in range(1, 10001):
         if GPU:
             (feature, label) = (feature.cuda(), label.cuda())
         optimizer.zero_grad()
-        modelInputs = feature.reshape(feature.shape[0], 5, 5150)
+        modelInputs = feature.reshape(feature.shape[0], 7, 100)
         modelOutputs = model(modelInputs)
         loss = costFunc(modelOutputs, label)
         loss.backward()
@@ -66,7 +66,7 @@ for epoch in range(1, 10001):
         for (feature, label) in loaderTest:
             if GPU:
                 (feature, label) = (feature.cuda(), label.cuda())
-            modelInputs = feature.reshape(feature.shape[0], 5, 5150)
+            modelInputs = feature.reshape(feature.shape[0], 7, 100)
             modelOutputs = model(modelInputs)
 
             output = modelOutputs.cpu()
