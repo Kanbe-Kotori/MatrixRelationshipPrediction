@@ -50,7 +50,7 @@ class ModelHist(nn.Module):
             nn.Flatten(),
         )
         self.dense = nn.Sequential(
-            nn.Linear(64*4*4, 64),
+            nn.Linear(64*2*2, 64),
             nn.ReLU(),
         )
         self.output = nn.Sequential(

@@ -97,8 +97,8 @@ def hist2d(listIndex: list[int]):
         label1 = []
         for tf in range(100):
             for g in range(100):
-                hist, _, _ = numpy.histogram2d(dataTF[tf], dataG[g], bins=32)
-                hist = hist.reshape((1, 32, 32))
+                hist, _, _ = numpy.histogram2d(dataTF[tf], dataG[g], bins=16, density=True)
+                hist = hist.reshape((1, 16, 16))
                 label = int(labels[g][tf])
                 if label == 0:
                     label0.append(hist)

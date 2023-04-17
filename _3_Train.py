@@ -20,8 +20,8 @@ def calculate_auprc(predict, actual):
 
 
 torch.manual_seed(42)
-dataTrain = D.generateDataset(list(range(80)))
-dataTest = D.generateDataset(list(range(80, 100)))
+dataTrain = D.generateDataset(list(range(300)))
+dataTest = D.generateDataset(list(range(300, 350)))
 
 loaderTrain = dataTrain.getLoader(50)
 loaderTest = dataTest.getLoader(50)
@@ -46,7 +46,7 @@ for epoch in tqdm(range(1, 10001)):
         if GPU:
             (feature, label) = (feature.cuda(), label.cuda())
         optimizer.zero_grad()
-        modelInputs = feature.reshape(feature.shape[0], 1, 32, 32)
+        modelInputs = feature.reshape(feature.shape[0], 1, 16, 16)
         modelOutputs = model(modelInputs)
         loss = costFunc(modelOutputs, label)
         loss.backward()
@@ -80,7 +80,7 @@ for epoch in tqdm(range(1, 10001)):
             label = label.view(-1, 1).float()
             if GPU:
                 (feature, label) = (feature.cuda(), label.cuda())
-            modelInputs = feature.reshape(feature.shape[0], 1, 32, 32)
+            modelInputs = feature.reshape(feature.shape[0], 1, 16, 16)
             modelOutputs = model(modelInputs)
 
             output = modelOutputs.cpu()
