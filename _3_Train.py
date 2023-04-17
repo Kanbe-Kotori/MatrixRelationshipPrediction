@@ -20,14 +20,14 @@ def calculate_auprc(predict, actual):
 
 
 torch.manual_seed(42)
-dataTrain = D.generateDataset(list(range(300)))
-dataTest = D.generateDataset(list(range(300, 350)))
+dataTrain = D.generateDataset(list(range(80)))
+dataTest = D.generateDataset(list(range(80, 100)))
 
-loaderTrain = dataTrain.getLoader(100)
-loaderTest = dataTest.getLoader(100)
+loaderTrain = dataTrain.getLoader(50)
+loaderTest = dataTest.getLoader(50)
 
 GPU: bool = torch.cuda.is_available()
-model = M.Model()
+model = M.ModelHist()
 # costFunc = torch.nn.BCELoss()
 costFunc = M.ImbalancedLoss(alpha=19)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
@@ -42,10 +42,11 @@ for epoch in tqdm(range(1, 10001)):
     lossCount = 0
     for (feature, label) in loaderTrain:
         model.train()
+        label = label.view(-1, 1).float()
         if GPU:
             (feature, label) = (feature.cuda(), label.cuda())
         optimizer.zero_grad()
-        modelInputs = feature.reshape(feature.shape[0], 7, 100)
+        modelInputs = feature.reshape(feature.shape[0], 1, 32, 32)
         modelOutputs = model(modelInputs)
         loss = costFunc(modelOutputs, label)
         loss.backward()
@@ -67,7 +68,7 @@ for epoch in tqdm(range(1, 10001)):
     if epoch % 1 == 0:
         accuracy = 100 * (tp + tn) / (tp + tn + fp + fn)
         recall = 100 * tp / (tp + fn)
-        auprcCount /= len(dataTrain) / 100
+        auprcCount /= len(dataTrain) / 50
         tqdm.write('')
         tqdm.write('acc {:.3f}% recall {:.3f}% auprc {:.3f}%'.format(accuracy, recall, auprcCount))
         tqdm.write('loss {}'.format(lossCount / len(dataTrain)))
@@ -76,9 +77,10 @@ for epoch in tqdm(range(1, 10001)):
         testtp, testtn, testfp, testfn = 0, 0, 0, 0
         testAuprcCount = 0
         for (feature, label) in loaderTest:
+            label = label.view(-1, 1).float()
             if GPU:
                 (feature, label) = (feature.cuda(), label.cuda())
-            modelInputs = feature.reshape(feature.shape[0], 7, 100)
+            modelInputs = feature.reshape(feature.shape[0], 1, 32, 32)
             modelOutputs = model(modelInputs)
 
             output = modelOutputs.cpu()
@@ -94,7 +96,7 @@ for epoch in tqdm(range(1, 10001)):
             testAuprcCount += calculate_auprc(output, label)
         accuracy = 100 * (testtp + testtn) / (testtp + testtn + testfp + testfn)
         recall = 100 * testtp / (testtp + testfn)
-        testAuprcCount /= len(dataTest) / 100
+        testAuprcCount /= len(dataTest) / 50
         tqdm.write('\nTesting result:')
         tqdm.write('test acc {:.3f}% recall {:.3f}% auprc {:.3f}%'.format(accuracy, recall, testAuprcCount))
     if epoch % 1000 == 0:
